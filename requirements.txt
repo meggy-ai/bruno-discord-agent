@@ -1,0 +1,13 @@
+bruno-core
+bruno-llm
+bruno-memory
+bruno-abilities
+
+#db
+sqlalchemy
+psycopg2-binary
+alembic 
+python-dotenv
+#async db
+sqlalchemy[asyncio]
+asyncpg
