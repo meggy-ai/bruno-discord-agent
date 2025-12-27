@@ -144,4 +144,4 @@ class OllamaClient(LLMInterface):
     
     def get_system_prompt(self) -> Optional[str]:
         """Get the current system prompt."""
-        return self._system_prompt    
+        return self._system_prompt

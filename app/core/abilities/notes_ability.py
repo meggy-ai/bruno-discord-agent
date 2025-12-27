@@ -1,7 +1,5 @@
 from typing import Dict, Any, Optional
 import logging
-from asgiref.sync import sync_to_async
-
 # Import interfaces from published bruno packages
 from bruno_abilities import BaseAbility, AbilityMetadata, ParameterMetadata
 from bruno_abilities.base.ability_base import AbilityContext, AbilityResult
@@ -45,7 +43,7 @@ class NotesAbility(BaseAbility):
     
     def __init__(self):
         super().__init__()
-        from apps.chat.models import Note, NoteEntry
+        from db.models.note import Note, NoteEntry
         self.Note = Note
         self.NoteEntry = NoteEntry
         logger.info("Initialized NotesAbility")
@@ -73,14 +71,14 @@ class NotesAbility(BaseAbility):
             ]
         )
     
-    async def _execute(self, parameters: dict[str, Any], context: AbilityContext) -> AbilityResult:
+    def _execute(self, parameters: dict[str, Any], context: AbilityContext) -> AbilityResult:
         """Internal execution method implementing the ability logic."""
         command = parameters.get("command", "")
         user_id = context.user_id
         conversation_id = parameters.get("conversation_id", "default")
         
         # Handle notes command using legacy method
-        response = await self.handle_notes_command(user_id, conversation_id, command)
+        response = self.handle_notes_command(user_id, conversation_id, command)
         
         if response:
             return AbilityResult(
@@ -92,3 +90,11 @@ class NotesAbility(BaseAbility):
                 success=False,
                 message="Not a notes command"
             )
+    
+    def handle_notes_command(
+        self,
+        user_id: str,
+        conversation_id: str,
+        command: str
+    ) -> str:
+        print("Handling notes command is called, needs to be implemented")

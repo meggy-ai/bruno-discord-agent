@@ -103,7 +103,7 @@ class BrunoAgent(AssistantInterface):
         """
         try:
             if not self._is_initialized:
-                await self.initialize()
+                self.initialize()
             
             user_message = message.content
             conversation_id = message.conversation_id or "default"
@@ -111,14 +111,14 @@ class BrunoAgent(AssistantInterface):
             metadata = message.metadata or {}
             # Check if this is a timer command first
             if self.timer_ability and user_id:
-                timer_response = await self.timer_ability.handle_timer_command(
+                timer_response = self.timer_ability.handle_timer_command(
                     user_id=user_id,
                     conversation_id=conversation_id,
                     command=user_message
                 )
                 if timer_response:
                     # This was a timer command - return timer response
-                    action_result = ActionResult(
+                    action_result = ActionResult(   
                         action_type="timer",
                         status=ActionStatus.SUCCESS,
                         message=timer_response
@@ -132,7 +132,7 @@ class BrunoAgent(AssistantInterface):
             
             # Check if this is a notes command
             if self.notes_ability and user_id:
-                notes_response = await self.notes_ability.handle_notes_command(
+                notes_response =  self.notes_ability.handle_notes_command(
                     user_id=user_id,
                     conversation_id=conversation_id,
                     command=user_message
@@ -154,10 +154,10 @@ class BrunoAgent(AssistantInterface):
 
             # Get conversation history from memory if available
             conversation_history = []
-            if self.memory_manager:
-                conversation_history = await self.memory_manager.get_history(
-                    conversation_id, limit=10
-                )
+            # if self.memory_manager:
+            #     conversation_history = self.memory_manager.get_history(
+            #         conversation_id, limit=10
+            #     )
             
             logger.info(f"Conversation history retrieved: {len(conversation_history)} messages for {conversation_id}")
             for i, msg in enumerate(conversation_history):
