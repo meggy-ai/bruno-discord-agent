@@ -103,7 +103,7 @@ class BrunoAgent(AssistantInterface):
         """
         try:
             if not self._is_initialized:
-                self.initialize()
+                await self.initialize()
             
             user_message = message.content
             conversation_id = message.conversation_id or "default"
@@ -225,12 +225,12 @@ class BrunoAgent(AssistantInterface):
             # Memory manager only reads from database for conversation history
             
             return AssistantResponse(
-                text=response["content"],
+                text=response,
                 actions=[],
                 success=True,
                 metadata={
                     "model": self.config.model,
-                    "tokens_used": response.get("tokens_used", 0)
+                    "tokens_used": self.get_token_count(response) if hasattr(self, 'get_token_count') else 0
                 }
             )
             

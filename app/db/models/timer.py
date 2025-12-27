@@ -19,7 +19,7 @@ class Timer(Base):
     id = Column(Integer, primary_key=True, index=True)
     user = relationship("User", back_populates="timers")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=True) 
+    conversation_id = Column(String(100), nullable=True, comment='External conversation identifier') 
     
     # Timer details
     name = Column(String(200), nullable=False, comment='Description of what the timer is for')

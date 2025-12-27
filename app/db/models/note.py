@@ -12,6 +12,9 @@ class Note(Base):
     name = Column(String(100), default='Untitled')
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship to note entries
+    entries = relationship("NoteEntry", back_populates="note")
 
 class NoteEntry(Base):
     __tablename__ = "note_entries"

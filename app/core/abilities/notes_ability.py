@@ -43,7 +43,7 @@ class NotesAbility(BaseAbility):
     
     def __init__(self):
         super().__init__()
-        from db.models.note import Note, NoteEntry
+        from app.db.models.note import Note, NoteEntry
         self.Note = Note
         self.NoteEntry = NoteEntry
         logger.info("Initialized NotesAbility")

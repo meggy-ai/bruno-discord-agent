@@ -137,6 +137,67 @@ class OllamaClient(LLMInterface):
             "base_url": self.base_url
         }
     
+    async def generate_dict(
+        self,
+        messages: List[Dict[str, str]],
+        model: str = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
+        stream: bool = False,
+        **kwargs: Any
+    ) -> Dict[str, Any]:
+        """Generate response in dictionary format for backward compatibility."""
+        try:
+            prompt = self._messages_to_prompt(messages)
+            
+            payload = {
+                "model": model or self.model,
+                "prompt": prompt,
+                "temperature": temperature,
+                "options": {
+                    "num_predict": max_tokens,
+                },
+                "stream": stream
+            }
+            
+            url = f"{self.base_url}/api/generate"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise Exception(f"Ollama API error: {response.status} - {error_text}")
+                    
+                    data = await response.json()
+                    return {
+                        "content": data.get("response", ""),
+                        "model": model or self.model,
+                        "usage": {
+                            "total_tokens": self.get_token_count(data.get("response", ""))
+                        }
+                    }
+        except Exception as e:
+            logger.error(f"Error in generate_dict: {str(e)}", exc_info=True)
+            raise
+    
+    def _messages_to_prompt(self, messages: List[Dict[str, str]]) -> str:
+        """Convert messages to a single prompt string."""
+        prompt_parts = []
+        
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            if role == "system":
+                prompt_parts.append(f"System: {content}")
+            elif role == "user":
+                prompt_parts.append(f"Human: {content}")
+            elif role == "assistant":
+                prompt_parts.append(f"Assistant: {content}")
+        
+        prompt_parts.append("Assistant:")
+        return "\n\n".join(prompt_parts)
+
     def set_system_prompt(self, prompt: str) -> None:
         """Set or update the system prompt."""
         self._system_prompt = prompt

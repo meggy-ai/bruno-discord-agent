@@ -2,3 +2,4 @@ alembic revision --autogenerate -m "description of changes"
 alembic upgrade head
 
 python app/main.py 
+python -m app.main
