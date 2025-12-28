@@ -11,3 +11,9 @@ python-dotenv
 #async db
 sqlalchemy[asyncio]
 asyncpg
+
+#discord
+discord.py
+
+#common
+python-dotenv
