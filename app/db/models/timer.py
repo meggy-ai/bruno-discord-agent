@@ -1,10 +1,7 @@
-from sqlalchemy import Column, Integer, String
-from app.db.base import Base
-from sqlalchemy import DateTime
-from datetime import datetime
-from sqlalchemy import ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy import Boolean
+from datetime import datetime
+from app.db.base import Base
 
 
 class Timer(Base):
@@ -17,7 +14,6 @@ class Timer(Base):
     ]
 
     id = Column(Integer, primary_key=True, index=True)
-    user = relationship("User", back_populates="timers")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     conversation_id = Column(String(100), nullable=True, comment='External conversation identifier') 
     
@@ -38,3 +34,5 @@ class Timer(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationship
+    user = relationship("User", back_populates="timers")

@@ -91,6 +91,45 @@ class BrunoAgent(AssistantInterface):
         message: Message,
         context: Optional[ConversationContext] = None
     ) -> AssistantResponse:
+            system_prompt = self.config.system_prompt
+            messages = [
+                {"role": "system", "content": system_prompt}
+            ]
+            user_message = message.content
+            # Add current user message (might be duplicate from history, but we ensure uniqueness above)
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
+            
+            logger.info(f"Total messages being sent to LLM: {len(messages)}")
+            
+            # Generate response using LLM
+            response = await self.llm_client.generate(
+                messages=messages,
+                model=self.config.model,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens
+            )
+            
+            # Note: Messages are saved to database by views.py, not here
+            # Memory manager only reads from database for conversation history
+            
+            return AssistantResponse(
+                text=response,
+                actions=[],
+                success=True,
+                metadata={
+                    "model": self.config.model,
+                    "tokens_used": self.get_token_count(response) if hasattr(self, 'get_token_count') else 0
+                }
+            )
+
+    async def process_message_2(
+        self,
+        message: Message,
+        context: Optional[ConversationContext] = None
+    ) -> AssistantResponse:
         """
         Process a user message and generate a response.
         
