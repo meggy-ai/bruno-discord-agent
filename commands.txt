@@ -1,21 +1,6 @@
-alembic downgrade base
-alembic upgrade head
-
-# Or drop and recreate database (nuclear option):
-# dropdb -U postgres bruno_discord_pa
-# createdb -U postgres bruno_discord_pa
-# alembic upgrade head
-
 # Generate new migration
 alembic revision --autogenerate -m "description of changes"
 alembic upgrade head
-
-# For Alembic with async setup, use psycopg2 driver:
-# Option 1: Temporarily override DATABASE_URL
-DATABASE_URL=postgresql://postgres:Test%40123@localhost:5432/bruno_discord_pa alembic upgrade head
-
-# Option 2: Install psycopg2-binary and update .env to use it for migrations
-pip install psycopg2-binary
 
 python app/main.py 
 python -m app.main

@@ -57,30 +57,36 @@ class DiscordTextBot:
 
         @self.bot.event
         async def on_message(message: discord.Message):
+            # check if the message is from a bot
             if message.author.bot:
                 return
             # respond to DMs or messages containing "bruno" (configurable)
             is_dm = isinstance(message.channel, discord.DMChannel)
             if not is_dm and "bruno" not in message.content.lower() and self.bot.user not in message.mentions:
                 return
+            # rate limit to check if user is sending messages too quickly
             if not self._check_rate_limit(message.author.id):
                 return
+            
             content = message.content.strip()
             # Remove trigger word
             content_clean = content.lower().replace("bruno", "", 1).strip() or content
             # Call your command processor (replace this with actual LLM call)
-            msg = BrunoMessage(
-                role="user",
-                content=content_clean
-            )
-            response = await self.bruno_agent.process_message(msg)
+            response = await self.process_command_stub(content_clean, str(message.author.id), message.author.name)  
             response_text = response.text if response else "Sorry, I couldn't process your request."
             await self._split_and_send(message.channel, response_text)
 
-    async def process_command_stub(self, command: str, user_id: str, username: str) -> str:
-        # Replace with call to your LLM or service. Simple echo for now.
-        await asyncio.sleep(0)  # keep async
-        return f"Echo from bot: {command}"
+    async def process_command_stub(self, content: str, user_id: str, username: str) -> str:
+        print(f"Processing command from {username} ({user_id}): {content}")
+        import app.crud.user as user_crud
+        import app.db.session as db_session
+        user = user_crud.create_or_get_user(db_session.SessionLocal(), username, username, "")
+        msg = BrunoMessage(
+                role="user",
+                content=content
+            )
+        response = await self.bruno_agent.process_message(msg)
+        return response
 
     def run(self):
         self.bot.run(self.token)
