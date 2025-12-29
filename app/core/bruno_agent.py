@@ -18,6 +18,7 @@ class AgentConfig:
     max_tokens: int = 2000
     system_prompt: str = "You are Bruno, a helpful AI assistant."
     llm_provider: str = "ollama"
+    base_url: Optional[str] = None
 
 class BrunoAgent(AssistantInterface):
     """Core Bruno AI Agent implementing AssistantInterface."""

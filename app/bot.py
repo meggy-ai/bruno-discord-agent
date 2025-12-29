@@ -4,13 +4,8 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-
-from app.core.abilities.notes_ability import NotesAbility
-from app.core.abilities.timer_ability import TimerAbility
-from app.core.bruno_agent import AgentConfig, BrunoAgent
-from app.core.bruno_llm import OllamaClient
-from app.core.bruno_memory import MemoryManager
 from bruno_core.models import Message as BrunoMessage
+from app.lib.common import get_agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,7 +13,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bruno.discord.text")
 
-class SimpleDiscordTextBot:
+class DiscordTextBot:
     def __init__(self, token: str, cooldown_seconds: int = 2):
         intents = discord.Intents.default()
         intents.message_content = True
@@ -26,26 +21,7 @@ class SimpleDiscordTextBot:
         self.token = token
         self.user_last_message = {}  # user_id -> datetime
         self.cooldown_seconds = cooldown_seconds
-        config = AgentConfig(
-                name="sample_agent",
-                model="mistral:7b"
-            )
-        # Create LLM client
-        llm_client = OllamaClient(
-            base_url="http://localhost:11434",
-            model="mistral:7b"
-        )
-        notes_ability = NotesAbility()
-        timer_ability = TimerAbility()
-        memory_manager = MemoryManager()
-        # Create Bruno agent
-        self.bruno_agent = BrunoAgent(
-            config=config,
-            llm_client=llm_client,
-            memory_manager=memory_manager,
-            notes_ability=notes_ability,
-            timer_ability=timer_ability
-        )
+        self.bruno_agent = get_agent()
         self._register_handlers()
 
     def _check_rate_limit(self, user_id: int) -> bool:
@@ -113,5 +89,5 @@ if __name__ == "__main__":
     token = os.getenv("DISCORD_TOKEN")
     if not token:
         raise SystemExit("Set DISCORD_TOKEN")
-    bot = SimpleDiscordTextBot(token=token)
+    bot = DiscordTextBot(token=token)
     bot.run()
