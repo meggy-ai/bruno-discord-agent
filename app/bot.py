@@ -95,7 +95,7 @@ class DiscordTextBot:
             conversation_id=conversation.id,
             role="user",
             content=content,
-            timestamp=int(datetime.now().timestamp()),
+            timestamp=datetime.now(),
             sequence_number=1  # Simplified for this example
         )
         db.add(message)
@@ -109,7 +109,7 @@ class DiscordTextBot:
             conversation_id=conversation.id,
             role="assistant",
             content=response.text,
-            timestamp=int(datetime.now().timestamp()),
+            timestamp=datetime.now(),
             sequence_number=2  # Simplified for this example
         )
         db.add(message)
