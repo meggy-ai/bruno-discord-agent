@@ -9,6 +9,8 @@ from app.lib.common import get_agent
 import app.crud.user as user_crud
 from app.db.session import get_db_session
 from app.db.models import Conversation, Message
+from app.lib.memory_store import MemoryStore
+from app.lib.user_manager import UserManager
 
 
 # Load environment variables from .env file
@@ -26,6 +28,10 @@ class DiscordTextBot:
         self.user_last_message = {}  # user_id -> datetime
         self.cooldown_seconds = cooldown_seconds
         self.bruno_agent = get_agent()
+        self.db = get_db_session()
+        self.memory_store = MemoryStore(self.db)
+        self.user_manager = UserManager(self.db)
+        
         self._register_handlers()
 
     def _check_rate_limit(self, user_id: int) -> bool:
@@ -72,49 +78,47 @@ class DiscordTextBot:
             if not self._check_rate_limit(message.author.id):
                 return
             
-            content = message.content.strip()
-            # Remove trigger word
-            content_clean = content.lower().replace("bruno", "", 1).strip() or content
-            # Call your command processor (replace this with actual LLM call)
-            response = await self.process_command_stub(content_clean, str(message.author.id), message.author.name)  
+            response = await self._handle_text_message(message, str(message.author.id), message.author.name)  
             response_text = response.text if response else "Sorry, I couldn't process your request."
             await self._split_and_send(message.channel, response_text)
 
-    async def process_command_stub(self, content: str, user_id: str, username: str) -> str:
-        print(f"Processing command from {username} ({user_id}): {content}")
+    async def _handle_text_message(self, message: discord.Message, user_id: str, username: str) -> str:
+        print(f"Processing command from {username} ({user_id}): {message.content}")
+
+        content = message.content.strip()
+            # Remove trigger word
+        content_clean = content.lower().replace("bruno", "", 1).strip() or content
+        if not content_clean:
+            content_clean = content  # Keep original if nothing left
         
-        db = get_db_session()
-        user = user_crud.create_or_get_user(db, username)
-        conversation = db.query(Conversation).filter(Conversation.user_id == user.id).first()
-        if not conversation:
-            conversation = Conversation(user_id=user.id, title="Default Conversation")
-            db.add(conversation)
-            db.commit()
-            db.refresh(conversation)
-        message = Message(
-            conversation_id=conversation.id,
-            role="user",
-            content=content,
-            timestamp=datetime.now(),
-            sequence_number=1  # Simplified for this example
-        )
-        db.add(message)
-        db.commit()
-        msg = BrunoMessage(
+
+        # Show typing indicator
+        show_typing = True
+
+        async with message.channel.typing() if show_typing else asyncio.nullcontext():
+            user = self.user_manager.get_user_by_username(username)
+            
+            conversation = self.memory_store.get_conversations_for_user(user.id)
+            if not conversation:
+                conversation = self.memory_store.create_conversation(user.id, title="Discord Conversation")
+            
+            
+            self.memory_store.add_message(
+                conversation_id=conversation.id,
                 role="user",
                 content=content
             )
-        response = await self.bruno_agent.process_message(msg)
-        message = Message(
-            conversation_id=conversation.id,
-            role="assistant",
-            content=response.text,
-            timestamp=datetime.now(),
-            sequence_number=2  # Simplified for this example
-        )
-        db.add(message)
-        db.commit()
-        return response
+            msg = BrunoMessage(
+                    role="user",
+                    content=content
+                )
+            response = await self.bruno_agent.process_message(msg)
+            self.memory_store.add_message(
+                conversation_id=conversation.id,
+                role="assistant",
+                content=response.text
+            )
+            return response
 
     def run(self):
         self.bot.run(self.token)
