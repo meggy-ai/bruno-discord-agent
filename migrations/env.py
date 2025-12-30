@@ -7,6 +7,8 @@ from sqlalchemy import pool
 from alembic import context
 from dotenv import load_dotenv
 from app.db.base import Base
+# Import all models to ensure they are registered with Base.metadata
+from app.db.models import User, Conversation, Message, Timer, Note, NoteEntry
 
 # Load environment variables from .env file
 load_dotenv()
