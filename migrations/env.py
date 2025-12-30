@@ -7,9 +7,6 @@ from sqlalchemy import pool
 from alembic import context
 from dotenv import load_dotenv
 from app.db.base import Base
-from app.db.models.user import User
-from app.db.models.note import Note, NoteEntry
-from app.db.models.timer import Timer
 
 # Load environment variables from .env file
 load_dotenv()

@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from app.db.models.user import User
+from app.db.models import User
+from typing import Optional
 
-def create_user(db: Session, name: str, email: str, username: str):
-    user = User(name=name, email=email, username=username)
+def create_user(db: Session, name: str, username: str):
+    user = User(name=name, username=username)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -14,8 +15,10 @@ def get_user(db: Session, user_id: int):
 def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.username == username).first()
 
-def create_or_get_user(db: Session, name: str, username: str, email: str = None):
+def create_or_get_user(db: Session, username: str, name: Optional[str] = None):
     user = get_user_by_username(db, username)
     if user:
         return user
-    return create_user(db, name, username, email)
+    else:
+        return create_user(db, name or username, username)
+        

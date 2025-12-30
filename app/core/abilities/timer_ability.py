@@ -14,7 +14,7 @@ class TimerAbility(BaseAbility):
     
     def __init__(self):
         super().__init__()
-        from app.db.models.timer import Timer
+        from app.db.models import Timer
         self.Timer = Timer
         logger.info("Initialized TimerAbility")
     

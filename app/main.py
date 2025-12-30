@@ -1,4 +1,3 @@
-import asyncio
 from app.db.session import SessionLocal
 from app.crud.user import create_user
 from app.core.bruno_agent import BrunoAgent, AgentConfig
@@ -7,7 +6,6 @@ from app.core.bruno_memory import MemoryManager
 from app.core.abilities.notes_ability import NotesAbility
 from app.core.abilities.timer_ability import TimerAbility
 from bruno_core.models import Message, AssistantResponse, ConversationContext
-import os
 
 
 db = SessionLocal()
@@ -33,13 +31,12 @@ async def main():
         notes_ability=notes_ability,
         timer_ability=timer_ability
     )
-
     msg = Message(
         role="user",
-        content="Hey, whats the capital of brazil?"
+        content="Hello, Bruno!"
     )
     response = await bruno_agent.process_message(msg)
     print(f"Hello, Bruno Discord Agent! Response: {response}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

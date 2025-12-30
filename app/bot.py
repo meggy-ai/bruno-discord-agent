@@ -6,6 +6,10 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from bruno_core.models import Message as BrunoMessage
 from app.lib.common import get_agent
+import app.crud.user as user_crud
+from app.db.session import get_db_session
+from app.db.models import Conversation, Message
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -78,14 +82,38 @@ class DiscordTextBot:
 
     async def process_command_stub(self, content: str, user_id: str, username: str) -> str:
         print(f"Processing command from {username} ({user_id}): {content}")
-        import app.crud.user as user_crud
-        import app.db.session as db_session
-        user = user_crud.create_or_get_user(db_session.SessionLocal(), username, username, "")
+        
+        db = get_db_session()
+        user = user_crud.create_or_get_user(db, username)
+        conversation = db.query(Conversation).filter(Conversation.user_id == user.id).first()
+        if not conversation:
+            conversation = Conversation(user_id=user.id, title="Default Conversation")
+            db.add(conversation)
+            db.commit()
+            db.refresh(conversation)
+        message = Message(
+            conversation_id=conversation.id,
+            role="user",
+            content=content,
+            timestamp=int(datetime.now().timestamp()),
+            sequence_number=1  # Simplified for this example
+        )
+        db.add(message)
+        db.commit()
         msg = BrunoMessage(
                 role="user",
                 content=content
             )
         response = await self.bruno_agent.process_message(msg)
+        message = Message(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=response.text,
+            timestamp=int(datetime.now().timestamp()),
+            sequence_number=2  # Simplified for this example
+        )
+        db.add(message)
+        db.commit()
         return response
 
     def run(self):
