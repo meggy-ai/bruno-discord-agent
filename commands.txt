@@ -4,3 +4,7 @@ alembic upgrade head
 
 python app/main.py 
 python -m app.main
+
+
+ioduser@samasus:~$ ip route show | grep -i default | awk '{ print $3}'
+172.18.224.1
